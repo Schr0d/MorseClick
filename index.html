@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>MorseClick</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e14;color:#00ff41;font-family:'JetBrains Mono',monospace;touch-action:none;user-select:none;-webkit-user-select:none}
+
+#app{max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative}
+
+#app::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,0.03) 2px,rgba(0,255,65,0.03) 4px);pointer-events:none;z-index:100}
+
+#hud{padding:8px 12px;font-size:9px;font-weight:500;color:rgba(0,255,65,0.6);letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;flex-shrink:0}
+
+#tree-area{flex:1;position:relative;overflow:hidden;min-height:0}
+#tree-svg{width:100%;height:100%;display:block}
+
+#readout{padding:8px 12px;text-align:center;border-top:1px solid #0a3a0a;flex-shrink:0;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#r-letter{font-size:28px;font-weight:700;color:#00ff41;min-height:32px;line-height:1}
+#r-morse{font-size:16px;font-weight:400;color:#00ff41;opacity:.8;min-height:20px;margin-top:2px}
+#r-status{font-size:8px;font-weight:400;color:rgba(0,255,65,0.6);min-height:12px;margin-top:2px}
+
+#path-bar{padding:2px 12px 4px;font-size:8px;color:rgba(0,255,65,0.6);display:flex;justify-content:space-between;flex-shrink:0}
+
+#key{flex-shrink:0;height:72px;background:#1a2a1a;border:2px solid #2a4a2a;border-radius:4px;color:#00ff41;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 50ms,border-color 50ms,transform 50ms;margin:8px;outline:none;-webkit-tap-highlight-color:transparent}
+#key.pressed{background:#003a00;border-color:#00ff41;transform:translateY(2px);box-shadow:0 0 20px rgba(0,255,65,0.3)}
+
+.edge{stroke:#0a3a0a;stroke-width:1.5;fill:none}
+.edge-traced{stroke:#00661a;stroke-width:1.5;fill:none}
+.edge-active{stroke:#00ff41;stroke-width:2;fill:none;filter:url(#glow)}
+
+.nd{fill:#0a3a0a;stroke:#0a3a0a;stroke-width:1}
+.nd-active{fill:#00ff41;stroke:#00ff41;stroke-width:1.5;filter:url(#glow)}
+.nd-visited{fill:#00661a;stroke:#00661a;stroke-width:1}
+
+.antenna{fill:none;stroke:#0a3a0a;stroke-width:1.5}
+.antenna-active{fill:none;stroke:#00ff41;stroke-width:2;filter:url(#glow)}
+
+.lbl{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;fill:#00661a}
+.lbl-on{fill:#00ff41}
+
+.dir{font-family:'JetBrains Mono',monospace;font-weight:300;fill:#0a3a0a}
+.dir-on{fill:rgba(0,255,65,0.7)}
+
+#signal{fill:#fff;filter:url(#sig-glow)}
+
+@keyframes err-flash{0%{border-color:#ff3333}50%{border-color:#ff3333;box-shadow:0 0 30px rgba(255,50,50,0.3)}100%{border-color:#2a4a2a;box-shadow:none}}
+.err-flash{animation:err-flash 300ms ease-out}
+
+@keyframes pop{0%{opacity:0;transform:scale(.7)}100%{opacity:1;transform:scale(1)}}
+.pop{animation:pop 250ms ease-out}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span>MORSE 1.0</span><span>SIG TRACK</span><span>CH 01</span></div>
+  <div id="tree-area">
+    <svg id="tree-svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="sig-glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <g id="g-edges"></g>
+      <g id="g-dirs"></g>
+      <g id="g-nodes"></g>
+      <g id="g-labels"></g>
+      <circle id="signal" cx="0" cy="0" r="3.5" display="none"/>
+    </svg>
+  </div>
+  <div id="path-bar"><span id="p-path">PATH: --</span><span id="p-node">NODE: 0/5</span></div>
+  <div id="readout">
+    <div id="r-letter"></div>
+    <div id="r-morse"></div>
+    <div id="r-status">READY</div>
+  </div>
+  <button id="key">KEY</button>
+</div>
+
+<script>
+// ── Morse tree: flat array, node N → left(2N+1)=dit, right(2N+2)=dah ──
+const T=['','E','T','I','A','N','M','S','U','R','W','D','K','G','O',
+  'H','V','F','','L','','P','J','B','X','C','Y','Z','Q','','',
+  '5','4','','3','','','','2','','','','','','','','','1',
+  '6','','','','','','','7','','','','8','','9','0'];
+
+const DIT_MS=200,TIMEOUT_MS=500,HOP_MS=200,VIB_MS=50;
+
+// ── State ──
+let st='IDLE',cur=0,sym=[],t0=0,tid=null,aid=null;
+
+// ── DOM ──
+const $=id=>document.getElementById(id);
+const svg=$('tree-svg'),gE=$('g-edges'),gD=$('g-dirs'),gN=$('g-nodes'),gL=$('g-labels');
+const sig=$('signal'),pPath=$('p-path'),pNode=$('p-node');
+const rLet=$('r-letter'),rMor=$('r-morse'),rSta=$('r-status'),key=$('key');
+const NS='http://www.w3.org/2000/svg';
+
+// ── Maze-like layout: root at left, each level full-width ──
+const VB_W=480,VB_H=500,PAD=18,NR=4,MAX_D=5,USABLE=VB_W-2*PAD;
+const LEVEL_Y=[35,110,185,260,338,425];
+
+function lvl(i){return Math.floor(Math.log2(i+1))}
+function has(i){if(i>=T.length)return false;if(T[i]!=='')return true;return has(2*i+1)||has(2*i+2)}
+
+// Deterministic jitter per node index
+function jitt(i){let h=i*2654435761>>>0;h=((h>>16)^h)*45679>>>0;return((h>>16)^h&0xffff)/0xffff-0.5}
+
+const pos={};
+function layout(){
+  for(let d=0;d<=MAX_D;d++){
+    const start=(1<<d)-1,count=1<<d;
+    const y=LEVEL_Y[d]||TP+d*80;
+    const nodes=[];
+    for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
+    const n=nodes.length;if(!n)continue;
+
+    if(d===0){
+      // Root: signal input at left edge
+      pos[nodes[0]]={x:PAD+14,y};
+    }else{
+      // Even spacing across full width + jitter
+      const sp=USABLE/(n+1);
+      const jAmt=Math.min(0.2,0.15-d*0.02); // less jitter at deeper levels
+      nodes.forEach((idx,i)=>{
+        pos[idx]={x:PAD+sp*(i+1)+jitt(idx)*sp*jAmt,y};
+      });
+    }
+  }
+}
+
+// Edge offsets from node center
+function botOff(i){return i===0?5:NR+1}
+function topOff(i){return NR+1}
+
+function waypoints(fi,ti){
+  const a=pos[fi],b=pos[ti];
+  const ab=a.y+botOff(fi),bt=b.y-topOff(ti);
+  const my=(ab+bt)/2;
+  return[{x:a.x,y:ab},{x:a.x,y:my},{x:b.x,y:my},{x:b.x,y:bt}];
+}
+
+function pathD(pts){return`M${pts[0].x} ${pts[0].y}L${pts[1].x} ${pts[1].y}L${pts[2].x} ${pts[2].y}L${pts[3].x} ${pts[3].y}`}
+
+// ── Render ──
+function render(){
+  gE.innerHTML='';gD.innerHTML='';gN.innerHTML='';gL.innerHTML='';
+
+  for(let i=0;i<T.length;i++){
+    if(!has(i))continue;
+    const{x,y}=pos[i];
+    const d=lvl(i);
+    const isDah=i>0&&i%2===0;
+    const isLetter=T[i]!=='';
+
+    // Edges + direction labels
+    for(const[ci,dir]of[[2*i+1,'·'],[2*i+2,'−']]){
+      if(!has(ci)||!pos[ci])continue;
+      const pts=waypoints(i,ci);
+      const p=document.createElementNS(NS,'path');
+      p.setAttribute('d',pathD(pts));p.setAttribute('class','edge');
+      p.dataset.from=i;p.dataset.to=ci;gE.appendChild(p);
+
+      // Direction label on horizontal segment midpoint
+      const lx=(x+pos[ci].x)/2;
+      const ly=pts[1].y;
+      const fs=d<3?13:d<4?10:8;
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('x',lx);t.setAttribute('y',ly+4);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('dominant-baseline','central');
+      t.setAttribute('font-size',fs);
+      t.setAttribute('class','dir');t.dataset.dir=`${i}-${ci}`;
+      t.textContent=dir;gD.appendChild(t);
+    }
+
+    // Node shape
+    if(i===0){
+      const a=document.createElementNS(NS,'path');
+      a.setAttribute('d',`M${x} ${y-10}L${x-7} ${y+4}L${x+7} ${y+4}Z`);
+      a.setAttribute('class','antenna');a.dataset.node=0;gN.appendChild(a);
+      const arc=document.createElementNS(NS,'path');
+      arc.setAttribute('d',`M${x-5} ${y-14}A6 6 0 0 1 ${x+5} ${y-14}`);
+      arc.setAttribute('fill','none');arc.setAttribute('stroke','#0a3a0a');
+      arc.setAttribute('stroke-width','1.5');
+      arc.setAttribute('class','antenna');arc.dataset.node='arc';gN.appendChild(arc);
+    }else if(isLetter){
+      // Letter node: dot (circle) for dit, line (rect) for dah
+      if(isDah){
+        const r=document.createElementNS(NS,'rect');
+        r.setAttribute('x',x-6);r.setAttribute('y',y-2);
+        r.setAttribute('width',12);r.setAttribute('height',4);
+        r.setAttribute('rx',1);r.setAttribute('class','nd');
+        r.dataset.node=i;gN.appendChild(r);
+      }else{
+        const c=document.createElementNS(NS,'circle');
+        c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',NR);
+        c.setAttribute('class','nd');c.dataset.node=i;gN.appendChild(c);
+      }
+      // Letter label
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('x',x);t.setAttribute('y',y+NR+11);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('dominant-baseline','central');
+      t.setAttribute('class','lbl');t.dataset.label=i;
+      t.textContent=T[i];gL.appendChild(t);
+    }else{
+      // Junction node (empty, has subtree): smaller shape
+      if(isDah){
+        const r=document.createElementNS(NS,'rect');
+        r.setAttribute('x',x-4);r.setAttribute('y',y-1.5);
+        r.setAttribute('width',8);r.setAttribute('height',3);
+        r.setAttribute('rx',1);r.setAttribute('class','nd');
+        r.dataset.node=i;gN.appendChild(r);
+      }else{
+        const c=document.createElementNS(NS,'circle');
+        c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',2.5);
+        c.setAttribute('class','nd');c.dataset.node=i;gN.appendChild(c);
+      }
+    }
+  }
+}
+
+// ── Visual update ──
+function updateVis(){
+  // Reset ALL elements via data attributes (not CSS class selectors)
+  gE.querySelectorAll('path').forEach(e=>e.className.baseVal='edge');
+  gN.querySelectorAll('[data-node]').forEach(e=>{
+    const n=e.dataset.node;
+    e.className.baseVal=(n==='0'||n==='arc')?'antenna':'nd';
+  });
+  gL.querySelectorAll('text').forEach(e=>e.className.baseVal='lbl');
+  gD.querySelectorAll('text').forEach(e=>e.className.baseVal='dir');
+
+  // Highlight traced path
+  for(let d=0;d<sym.length;d++){
+    const from=d===0?0:nodeAt(sym.slice(0,d));
+    const to=nodeAt(sym.slice(0,d+1));
+
+    const e=gE.querySelector(`[data-from="${from}"][data-to="${to}"]`);
+    if(e)e.className.baseVal='edge-traced';
+    const n=gN.querySelector(`[data-node="${from}"]`);
+    if(n)n.className.baseVal=from===0?'antenna-active':'nd-visited';
+    const l=gL.querySelector(`[data-label="${from}"]`);
+    if(l)l.className.baseVal='lbl lbl-on';
+    const dr=gD.querySelector(`[data-dir="${from}-${to}"]`);
+    if(dr)dr.className.baseVal='dir dir-on';
+  }
+
+  // Active (latest) edge and current node
+  if(sym.length>0){
+    const ci=nodeAt(sym);
+    const pi=sym.length===1?0:nodeAt(sym.slice(0,sym.length-1));
+    const ae=gE.querySelector(`[data-from="${pi}"][data-to="${ci}"]`);
+    if(ae)ae.className.baseVal='edge-active';
+    const n=gN.querySelector(`[data-node="${ci}"]`);
+    if(n)n.className.baseVal='nd-active';
+    const l=gL.querySelector(`[data-label="${ci}"]`);
+    if(l)l.className.baseVal='lbl lbl-on';
+    const dr=gD.querySelector(`[data-dir="${pi}-${ci}"]`);
+    if(dr)dr.className.baseVal='dir dir-on';
+  }
+}
+
+function nodeAt(s){let i=0;for(const c of s)i=c==='·'?2*i+1:2*i+2;return i}
+
+// ── Signal animation ──
+function animHop(fi,ti,cb){
+  const a=pos[fi],b=pos[ti];
+  if(!a||!b)return cb();
+  sig.setAttribute('display','');
+  const pts=waypoints(fi,ti);
+  let tl=0;
+  for(let i=1;i<pts.length;i++){
+    const dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y;
+    tl+=Math.sqrt(dx*dx+dy*dy);
+  }
+  const st0=performance.now();
+  function tick(now){
+    const p=Math.min((now-st0)/HOP_MS,1);
+    const d=p*tl;let acc=0;
+    let px=pts[0].x,py=pts[0].y;
+    for(let i=1;i<pts.length;i++){
+      const dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y;
+      const sl=Math.sqrt(dx*dx+dy*dy);
+      if(acc+sl>=d){const st2=(d-acc)/sl;px=pts[i-1].x+dx*st2;py=pts[i-1].y+dy*st2;break}
+      acc+=sl;px=pts[i].x;py=pts[i].y;
+    }
+    sig.setAttribute('cx',px);sig.setAttribute('cy',py);
+    if(p<1)aid=requestAnimationFrame(tick);
+    else{sig.setAttribute('display','none');cb()}
+  }
+  aid=requestAnimationFrame(tick);
+}
+
+// ── State machine ──
+function advance(dir){
+  const ni=dir==='·'?2*cur+1:2*cur+2;
+  if(ni>=T.length||!has(ni)){
+    key.classList.add('err-flash');
+    setTimeout(()=>key.classList.remove('err-flash'),300);
+    rSta.textContent='OVERFLOW';reset();return;
+  }
+
+  sym.push(dir);st='ANIM';
+  pPath.textContent='PATH: '+sym.join(' ');
+  pNode.textContent='NODE: '+sym.length+'/5';
+
+  animHop(cur,ni,()=>{
+    cur=ni;updateVis();
+
+    if(T[cur]!==''){
+      rLet.textContent=T[cur];
+      rMor.textContent=sym.join(' ');
+      rLet.classList.remove('pop');void rLet.offsetWidth;rLet.classList.add('pop');
+      rSta.textContent='RESOLVED: '+T[cur];
+    }else{
+      rSta.textContent='SIGNAL';
+    }
+
+    st='WAIT';
+    clearTimeout(tid);
+    tid=setTimeout(complete,TIMEOUT_MS);
+  });
+}
+
+function complete(){
+  if(T[cur]!==''){
+    rSta.textContent='LOCKED: '+T[cur];
+    if(navigator.vibrate)navigator.vibrate(VIB_MS);
+    setTimeout(reset,800);
+  }else{
+    rSta.textContent='NO LETTER';
+    setTimeout(reset,400);
+  }
+}
+
+function reset(){
+  clearTimeout(tid);
+  if(aid)cancelAnimationFrame(aid);
+  cur=0;sym=[];st='IDLE';
+  pPath.textContent='PATH: --';pNode.textContent='NODE: 0/5';
+  rLet.textContent='';rMor.textContent='';rSta.textContent='READY';
+  sig.setAttribute('display','none');
+  updateVis();
+}
+
+// ── Input ──
+function down(){
+  if(st==='ANIM')return;
+  if(st!=='IDLE'&&st!=='WAIT')return;
+  clearTimeout(tid);
+  t0=performance.now();st='TIMING';
+  key.classList.add('pressed');
+  if(cur===0&&sym.length===0){
+    gN.querySelectorAll('[data-node="0"],[data-node="arc"]').forEach(e=>e.className.baseVal='antenna-active');
+  }
+}
+
+function up(){
+  if(st!=='TIMING')return;
+  key.classList.remove('pressed');
+  const dir=(performance.now()-t0)<DIT_MS?'·':'−';
+  if(navigator.vibrate)navigator.vibrate(VIB_MS);
+  advance(dir);
+}
+
+key.addEventListener('pointerdown',e=>{e.preventDefault();down()});
+key.addEventListener('pointerup',e=>{e.preventDefault();up()});
+key.addEventListener('pointercancel',e=>{e.preventDefault();up()});
+key.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();down()}});
+document.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();up()}});
+
+// ── Init ──
+svg.setAttribute('viewBox',`0 0 ${VB_W} ${VB_H}`);
+layout();render();
+</script>
+</body>
+</html>
