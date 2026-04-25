@@ -286,16 +286,6 @@ function drawSchematic(){
   antArm2.setAttribute('class','wire');antArm2.dataset.sch='ant-arm';
   gAnt.appendChild(antArm2);
 
-  // Signal waves (3 arcs emanating from antenna)
-  for(let i=1;i<=3;i++){
-    const arc=document.createElementNS(NS,'path');
-    const r=6+i*5;
-    arc.setAttribute('d',`M${ANT_X} ${ANT_TOP+10-r+3} A${r} ${r} 0 0 1 ${ANT_X} ${ANT_TOP+10+r-3}`);
-    arc.setAttribute('fill','none');arc.setAttribute('stroke','rgba(0,255,65,0.08)');
-    arc.setAttribute('stroke-width','1');arc.dataset.sch='ant-wave';
-    gAnt.appendChild(arc);
-  }
-
   // Wire from antenna to key
   const w1=document.createElementNS(NS,'path');
   w1.setAttribute('d',`M${ANT_X} ${ANT_BOT} L${ANT_X} ${KEY_SCH_Y}`);
@@ -501,31 +491,27 @@ function updateVis(){
   // Reset tree elements
   gE.querySelectorAll('path').forEach(e=>e.className.baseVal='edge');
   gN.querySelectorAll('[data-node]').forEach(e=>{
-    const n=e.dataset.node;
-    e.className.baseVal=(n==='0'||n==='arc')?'antenna':'nd';
+    e.className.baseVal='nd';
   });
   gL.querySelectorAll('text').forEach(e=>e.className.baseVal='lbl');
   gD.querySelectorAll('text').forEach(e=>e.className.baseVal='dir');
 
-  // Reset schematic wires (skip ant-wave, uses inline stroke)
+  // Reset schematic wires (use direct attributes, not class)
   gAnt.querySelectorAll('[data-sch]').forEach(e=>{
-    if(e.dataset.sch==='ant-wave'){
-      e.setAttribute('stroke','rgba(0,255,65,0.08)');
-      return;
-    }
+    const s=e.dataset.sch;
     if(e.tagName==='line'||e.tagName==='path'){
-      e.className.baseVal='wire';
-    }else if(e.classList.contains('component')){
-      e.className.baseVal='component';
+      e.setAttribute('stroke','#0a3a0a');e.setAttribute('stroke-width','1.5');
+      e.removeAttribute('filter');
     }else if(e.dataset.node!==undefined){
-      e.className.baseVal='nd';
+      e.setAttribute('fill','#0a3a0a');e.setAttribute('stroke','#0a3a0a');
+      e.removeAttribute('filter');
     }
   });
   gOut.querySelectorAll('[data-sch]').forEach(e=>{
-    if(e.tagName==='line'||e.tagName==='path'){
-      e.className.baseVal='wire';
+    if(e.tagName==='path'){
+      e.setAttribute('stroke','#0a3a0a');e.removeAttribute('filter');
     }else{
-      e.className.baseVal='component';
+      e.setAttribute('stroke','#0a3a0a');e.removeAttribute('filter');
     }
   });
 
@@ -559,28 +545,26 @@ function updateVis(){
 
     // Light up schematic wires: antenna -> key -> decoder
     const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
-    if(wireAntKey)wireAntKey.className.baseVal='wire-active';
+    if(wireAntKey){wireAntKey.setAttribute('stroke','#00ff41');wireAntKey.setAttribute('filter','url(#glow)');}
     const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
-    if(wireKeyDec)wireKeyDec.className.baseVal='wire-active';
+    if(wireKeyDec){wireKeyDec.setAttribute('stroke','#00ff41');wireKeyDec.setAttribute('filter','url(#glow)');}
     const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
-    if(keyLever)keyLever.className.baseVal='wire-active';
+    if(keyLever){keyLever.setAttribute('stroke','#00ff41');keyLever.setAttribute('filter','url(#glow)');}
     const keyL=gAnt.querySelector('[data-sch="key-left"]');
-    if(keyL)keyL.className.baseVal='nd-active';
+    if(keyL){keyL.setAttribute('fill','#00ff41');keyL.setAttribute('stroke','#00ff41');keyL.setAttribute('filter','url(#glow)');}
     const keyR=gAnt.querySelector('[data-sch="key-right"]');
-    if(keyR)keyR.className.baseVal='nd-active';
+    if(keyR){keyR.setAttribute('fill','#00ff41');keyR.setAttribute('stroke','#00ff41');keyR.setAttribute('filter','url(#glow)');}
     const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
-    if(antMast)antMast.className.baseVal='wire-active';
+    if(antMast){antMast.setAttribute('stroke','#00ff41');antMast.setAttribute('filter','url(#glow)');}
     const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
-    antA.forEach(a=>a.className.baseVal='wire-active');
-    const antW=gAnt.querySelectorAll('[data-sch="ant-wave"]');
-    antW.forEach(w=>w.setAttribute('stroke','rgba(0,255,65,0.35)'));
+    antA.forEach(a=>{a.setAttribute('stroke','#00ff41');a.setAttribute('filter','url(#glow)');});
 
     // If resolved letter, light up output wire + headphone
     if(T[ci]!==''){
       const wireOut=gOut.querySelector('[data-sch="wire-out"]');
-      if(wireOut)wireOut.className.baseVal='wire-active';
+      if(wireOut){wireOut.setAttribute('stroke','#00ff41');wireOut.setAttribute('filter','url(#glow)');}
       gOut.querySelectorAll('[data-sch]').forEach(e=>{
-        if(e.classList.contains('component'))e.className.baseVal='component-active';
+        e.setAttribute('stroke','#00ff41');e.setAttribute('filter','url(#glow)');
       });
     }
   }
@@ -687,19 +671,21 @@ function down(){
   // Light up antenna + key on first touch
   if(cur===0&&sym.length===0){
     const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
-    if(antMast)antMast.className.baseVal='wire-active';
+    if(antMast){antMast.setAttribute('stroke','#00ff41');antMast.setAttribute('filter','url(#glow)');}
     const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
-    antA.forEach(a=>a.className.baseVal='wire-active');
-    const antW=gAnt.querySelectorAll('[data-sch="ant-wave"]');
-    antW.forEach(w=>w.setAttribute('stroke','rgba(0,255,65,0.35)'));
+    antA.forEach(a=>{a.setAttribute('stroke','#00ff41');a.setAttribute('filter','url(#glow)');});
     const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
-    if(wireAntKey)wireAntKey.className.baseVal='wire-active';
+    if(wireAntKey){wireAntKey.setAttribute('stroke','#00ff41');wireAntKey.setAttribute('filter','url(#glow)');}
     const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
-    if(keyLever)keyLever.className.baseVal='wire-active';
+    if(keyLever){keyLever.setAttribute('stroke','#00ff41');keyLever.setAttribute('filter','url(#glow)');}
     const keyL=gAnt.querySelector('[data-sch="key-left"]');
-    if(keyL)keyL.className.baseVal='nd-active';
+    if(keyL){keyL.setAttribute('fill','#00ff41');keyL.setAttribute('stroke','#00ff41');keyL.setAttribute('filter','url(#glow)');}
     const keyR=gAnt.querySelector('[data-sch="key-right"]');
-    if(keyR)keyR.className.baseVal='nd-active';
+    if(keyR){keyR.setAttribute('fill','#00ff41');keyR.setAttribute('stroke','#00ff41');keyR.setAttribute('filter','url(#glow)');}
+    const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
+    if(wireKeyDec){wireKeyDec.setAttribute('stroke','#00ff41');wireKeyDec.setAttribute('filter','url(#glow)');}
+    const rootNode=gN.querySelector('[data-node="0"]');
+    if(rootNode){rootNode.setAttribute('fill','#00ff41');rootNode.setAttribute('stroke','#00ff41');rootNode.setAttribute('filter','url(#glow)');}
   }
 }
 
