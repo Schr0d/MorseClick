@@ -154,12 +154,14 @@ function toneOn(){
   if(!audioCtx)return;
   gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
   gainNode.gain.setValueAtTime(0.15,audioCtx.currentTime);
+  gOut.querySelectorAll('[data-sch]:not([data-sch="wire-out"])').forEach(e=>{e.style.stroke='#00ff41';e.style.filter='url(#glow)';});
 }
 
 function toneOff(){
   if(!audioCtx)return;
   gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
   gainNode.gain.setValueAtTime(0,audioCtx.currentTime+0.02);
+  gOut.querySelectorAll('[data-sch]:not([data-sch="wire-out"])').forEach(e=>{e.style.stroke='#0a3a0a';e.style.filter='none';});
 }
 
 // ── DOM ──
@@ -178,8 +180,8 @@ const ANT_X=36,ANT_TOP=20,ANT_BOT=75;       // Antenna on left
 const KEY_SCH_X=36,KEY_SCH_Y=85;             // Key position in schematic
 const DECODE_X=48,DECODE_R=VB_W-40;          // Decoder box bounds (room for output wire)
 const DECODE_TOP=100,DECODE_BOT=410;          // Decoder box top/bottom
-const GND_Y=462;                              // Ground line Y
-const OUT_X=VB_W-36,OUT_Y=GND_Y-20;          // Headphone output
+const GND_Y=495;                              // Ground line Y
+const OUT_X=VB_W-36,OUT_Y=450;                // Headphone output (decoupled from GND)
 const PAD=18,NR=4,MAX_D=5;
 
 // Tree Y positions (inside decoder box)
@@ -253,8 +255,8 @@ function drawSchematic(){
   const labels=[
     {x:3,y:14,t:'ANT',c:'sch-label'},
     {x:DECODE_X+4,y:DECODE_TOP-4,t:'DECODER  U1',c:'decoder-title'},
-    {x:OUT_X-14,y:OUT_Y+16,t:'OUT',c:'sch-label'},
-    {x:VB_W/2-12,y:GND_Y+14,t:'GND',c:'sch-label'},
+    {x:OUT_X-24,y:OUT_Y+23,t:'OUT',c:'sch-label'},
+    {x:VB_W/2-32,y:GND_Y+24,t:'GND',c:'sch-label'},
     {x:3,y:KEY_SCH_Y+14,t:'KEY',c:'sch-label'},
     {x:VB_W-72,y:12,t:'MORSE 1.0',c:'sch-label'},
   ];
@@ -292,23 +294,24 @@ function drawSchematic(){
   w1.setAttribute('class','wire');w1.dataset.sch='wire-ant-key';
   gAnt.appendChild(w1);
 
-  // Key symbol (switch): a gap with a lever
-  const keyBase=document.createElementNS(NS,'circle');
-  keyBase.setAttribute('cx',ANT_X);keyBase.setAttribute('cy',KEY_SCH_Y);
-  keyBase.setAttribute('r','3');keyBase.setAttribute('class','nd');
-  keyBase.dataset.sch='key-left';gAnt.appendChild(keyBase);
-
-  const keyTip=document.createElementNS(NS,'circle');
-  keyTip.setAttribute('cx',ANT_X+30);keyTip.setAttribute('cy',KEY_SCH_Y);
-  keyTip.setAttribute('r','3');keyTip.setAttribute('class','nd');
-  keyTip.dataset.sch='key-right';gAnt.appendChild(keyTip);
-
-  // Lever (angled line, like a real telegraph key)
+  // Lever (angled line, like a real telegraph key) — behind endpoints
   const keyLever=document.createElementNS(NS,'line');
   keyLever.setAttribute('x1',ANT_X);keyLever.setAttribute('y1',KEY_SCH_Y);
   keyLever.setAttribute('x2',ANT_X+28);keyLever.setAttribute('y2',KEY_SCH_Y-6);
   keyLever.setAttribute('class','wire');keyLever.dataset.sch='key-lever';
   gAnt.appendChild(keyLever);
+
+  // Key right endpoint — behind key-left
+  const keyTip=document.createElementNS(NS,'circle');
+  keyTip.setAttribute('cx',ANT_X+30);keyTip.setAttribute('cy',KEY_SCH_Y);
+  keyTip.setAttribute('r','3');keyTip.setAttribute('class','nd');
+  keyTip.dataset.sch='key-right';gAnt.appendChild(keyTip);
+
+  // Key left endpoint — on top layer
+  const keyBase=document.createElementNS(NS,'circle');
+  keyBase.setAttribute('cx',ANT_X);keyBase.setAttribute('cy',KEY_SCH_Y);
+  keyBase.setAttribute('r','3');keyBase.setAttribute('class','nd');
+  keyBase.dataset.sch='key-left';gAnt.appendChild(keyBase);
 
   // Wire from key to decoder box entry point
   const rootX=pos[0]?pos[0].x:VB_W/2;
@@ -486,22 +489,24 @@ function render(){
   }
 }
 
-// ── Visual update (tree + schematic wires) ──
+// ── Visual update (tree only) ──
 function updateVis(){
-  // Reset tree elements
+  // Reset tree elements (clear inline styles set by down(), then reset class)
   gE.querySelectorAll('path').forEach(e=>e.className.baseVal='edge');
   gN.querySelectorAll('[data-node]').forEach(e=>{
+    e.style.fill='';e.style.stroke='';e.style.filter='';
     e.className.baseVal='nd';
   });
   gL.querySelectorAll('text').forEach(e=>e.className.baseVal='lbl');
   gD.querySelectorAll('text').forEach(e=>e.className.baseVal='dir');
 
-  // Reset schematic wires (inline style overrides CSS class)
+  // Reset schematic wires (skip always-lit antenna elements 1,2)
   gAnt.querySelectorAll('[data-sch]').forEach(e=>{
+    if(e.dataset.sch==='ant-mast'||e.dataset.sch==='ant-arm'||e.dataset.sch==='wire-ant-key'||e.dataset.sch==='key-left')return;
     if(e.tagName==='line'||e.tagName==='path'){
       e.style.stroke='#0a3a0a';e.style.strokeWidth='1.5';
       e.style.filter='none';
-    }else if(e.dataset.node!==undefined){
+    }else{
       e.style.fill='#0a3a0a';e.style.stroke='#0a3a0a';
       e.style.filter='none';
     }
@@ -537,31 +542,6 @@ function updateVis(){
     if(l)l.className.baseVal='lbl lbl-on';
     const dr=gD.querySelector(`[data-dir="${pi}-${ci}"]`);
     if(dr)dr.className.baseVal='dir dir-on';
-
-    // Light up schematic wires: antenna -> key -> decoder
-    const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
-    if(wireAntKey){wireAntKey.style.stroke='#00ff41';wireAntKey.style.filter='url(#glow)';}
-    const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
-    if(wireKeyDec){wireKeyDec.style.stroke='#00ff41';wireKeyDec.style.filter='url(#glow)';}
-    const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
-    if(keyLever){keyLever.style.stroke='#00ff41';keyLever.style.filter='url(#glow)';}
-    const keyL=gAnt.querySelector('[data-sch="key-left"]');
-    if(keyL){keyL.style.fill='#00ff41';keyL.style.stroke='#00ff41';keyL.style.filter='url(#glow)';}
-    const keyR=gAnt.querySelector('[data-sch="key-right"]');
-    if(keyR){keyR.style.fill='#00ff41';keyR.style.stroke='#00ff41';keyR.style.filter='url(#glow)';}
-    const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
-    if(antMast){antMast.style.stroke='#00ff41';antMast.style.filter='url(#glow)';}
-    const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
-    antA.forEach(a=>{a.style.stroke='#00ff41';a.style.filter='url(#glow)';});
-
-    // If resolved letter, light up output wire + headphone
-    if(T[ci]!==''){
-      const wireOut=gOut.querySelector('[data-sch="wire-out"]');
-      if(wireOut){wireOut.style.stroke='#00ff41';wireOut.style.filter='url(#glow)';}
-      gOut.querySelectorAll('[data-sch]').forEach(e=>{
-        e.style.stroke='#00ff41';e.style.filter='url(#glow)';
-      });
-    }
   }
 }
 
@@ -660,25 +640,24 @@ function down(){
   dahTid=setTimeout(()=>{
     if(st==='TIMING')up();
   },AUTO_DAH_MS);
-  // Light up antenna + key on first touch
-  if(cur===0&&sym.length===0){
-    const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
-    if(antMast){antMast.style.stroke='#00ff41';antMast.style.filter='url(#glow)';}
-    const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
-    antA.forEach(a=>{a.style.stroke='#00ff41';a.style.filter='url(#glow)';});
-    const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
-    if(wireAntKey){wireAntKey.style.stroke='#00ff41';wireAntKey.style.filter='url(#glow)';}
-    const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
-    if(keyLever){keyLever.style.stroke='#00ff41';keyLever.style.filter='url(#glow)';}
-    const keyL=gAnt.querySelector('[data-sch="key-left"]');
-    if(keyL){keyL.style.fill='#00ff41';keyL.style.stroke='#00ff41';keyL.style.filter='url(#glow)';}
-    const keyR=gAnt.querySelector('[data-sch="key-right"]');
-    if(keyR){keyR.style.fill='#00ff41';keyR.style.stroke='#00ff41';keyR.style.filter='url(#glow)';}
-    const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
-    if(wireKeyDec){wireKeyDec.style.stroke='#00ff41';wireKeyDec.style.filter='url(#glow)';}
-    const rootNode=gN.querySelector('[data-node="0"]');
-    if(rootNode){rootNode.style.fill='#00ff41';rootNode.style.stroke='#00ff41';rootNode.style.filter='url(#glow)';}
-  }
+  // Light antenna path every press (1,2,3,4,5,6)
+  const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
+  if(antMast){antMast.style.stroke='#00ff41';antMast.style.filter='url(#glow)';}
+  const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
+  antA.forEach(a=>{a.style.stroke='#00ff41';a.style.filter='url(#glow)';});
+  const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
+  if(wireAntKey){wireAntKey.style.stroke='#00ff41';wireAntKey.style.filter='url(#glow)';}
+  const keyL=gAnt.querySelector('[data-sch="key-left"]');
+  if(keyL){keyL.style.fill='#00ff41';keyL.style.stroke='#00ff41';keyL.style.filter='url(#glow)';}
+  const keyR=gAnt.querySelector('[data-sch="key-right"]');
+  if(keyR){keyR.style.fill='#00ff41';keyR.style.stroke='#00ff41';keyR.style.filter='url(#glow)';}
+  const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
+  if(keyLever){keyLever.style.stroke='#00ff41';keyLever.style.filter='url(#glow)';}
+  const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
+  if(wireKeyDec){wireKeyDec.style.stroke='#00ff41';wireKeyDec.style.filter='url(#glow)';}
+  // Light root node every press (7)
+  const rootNode=gN.querySelector('[data-node="0"]');
+  if(rootNode)rootNode.className.baseVal='nd-active';
 }
 
 function up(){
@@ -686,6 +665,12 @@ function up(){
   clearTimeout(dahTid);
   key.classList.remove('pressed');
   toneOff();
+  const keyR=gAnt.querySelector('[data-sch="key-right"]');
+  if(keyR){keyR.style.fill='#0a3a0a';keyR.style.stroke='#0a3a0a';keyR.style.filter='none';}
+  const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
+  if(keyLever){keyLever.style.stroke='#0a3a0a';keyLever.style.filter='none';}
+  const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
+  if(wireKeyDec){wireKeyDec.style.stroke='#0a3a0a';wireKeyDec.style.filter='none';}
   const dir=(performance.now()-t0)<DIT_MS?'·':'−';
   if(navigator.vibrate)navigator.vibrate(VIB_MS);
   advance(dir);
@@ -702,6 +687,14 @@ document.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();up
 // ── Init ──
 svg.setAttribute('viewBox',`0 0 ${VB_W} ${VB_H}`);
 layout();drawSchematic();render();
+// Always-lit antenna elements (1,2)
+const _m=gAnt.querySelector('[data-sch="ant-mast"]');
+if(_m){_m.style.stroke='#00ff41';_m.style.filter='url(#glow)';}
+gAnt.querySelectorAll('[data-sch="ant-arm"]').forEach(a=>{a.style.stroke='#00ff41';a.style.filter='url(#glow)';});
+const _w=gAnt.querySelector('[data-sch="wire-ant-key"]');
+if(_w){_w.style.stroke='#00ff41';_w.style.filter='url(#glow)';}
+const _kl=gAnt.querySelector('[data-sch="key-left"]');
+if(_kl){_kl.style.fill='#00ff41';_kl.style.stroke='#00ff41';_kl.style.filter='url(#glow)';}
 </script>
 </body>
 </html>
