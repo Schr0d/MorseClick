@@ -11,23 +11,31 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e14;color:#00ff4
 
 #app{max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative}
 
-#app::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,0.03) 2px,rgba(0,255,65,0.03) 4px);pointer-events:none;z-index:100}
+/* Subtle grid background */
+#app::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background-image:
+    linear-gradient(rgba(0,255,65,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,65,0.04) 1px,transparent 1px);
+  background-size:20px 20px;
+  pointer-events:none;z-index:0}
 
-#hud{padding:8px 12px;font-size:9px;font-weight:500;color:rgba(0,255,65,0.6);letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;flex-shrink:0}
+/* ── Schematic SVG area ── */
+#schematic{flex:1;position:relative;overflow:hidden;min-height:0;z-index:1}
+#sch-svg{width:100%;height:100%;display:block}
 
-#tree-area{flex:1;position:relative;overflow:hidden;min-height:0}
-#tree-svg{width:100%;height:100%;display:block}
-
-#readout{padding:8px 12px;text-align:center;border-top:1px solid #0a3a0a;flex-shrink:0;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+/* ── Readout panel ── */
+#readout{padding:6px 12px;text-align:center;border-top:1px dashed #0a3a0a;flex-shrink:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1}
 #r-letter{font-size:28px;font-weight:700;color:#00ff41;min-height:32px;line-height:1}
-#r-morse{font-size:16px;font-weight:400;color:#00ff41;opacity:.8;min-height:20px;margin-top:2px}
+#r-morse{font-size:14px;font-weight:400;color:#00ff41;opacity:.8;min-height:18px;margin-top:2px}
 #r-status{font-size:8px;font-weight:400;color:rgba(0,255,65,0.6);min-height:12px;margin-top:2px}
 
-#path-bar{padding:2px 12px 4px;font-size:8px;color:rgba(0,255,65,0.6);display:flex;justify-content:space-between;flex-shrink:0}
+#path-bar{padding:2px 12px 4px;font-size:8px;color:rgba(0,255,65,0.6);display:flex;justify-content:space-between;flex-shrink:0;z-index:1}
 
-#key{flex-shrink:0;height:72px;background:#1a2a1a;border:2px solid #2a4a2a;border-radius:4px;color:#00ff41;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 50ms,border-color 50ms,transform 50ms;margin:8px;outline:none;-webkit-tap-highlight-color:transparent}
+/* ── Key button (telegraph key) ── */
+#key{flex-shrink:0;height:72px;background:#1a2a1a;border:2px solid #2a4a2a;border-radius:4px;color:#00ff41;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 50ms,border-color 50ms,transform 50ms;margin:8px;outline:none;-webkit-tap-highlight-color:transparent;z-index:1}
 #key.pressed{background:#003a00;border-color:#00ff41;transform:translateY(2px);box-shadow:0 0 20px rgba(0,255,65,0.3)}
 
+/* ── SVG classes ── */
 .edge{stroke:#0a3a0a;stroke-width:1.5;fill:none}
 .edge-traced{stroke:#00661a;stroke-width:1.5;fill:none}
 .edge-active{stroke:#00ff41;stroke-width:2;fill:none;filter:url(#glow)}
@@ -36,9 +44,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e14;color:#00ff4
 .nd-active{fill:#00ff41;stroke:#00ff41;stroke-width:1.5;filter:url(#glow)}
 .nd-visited{fill:#00661a;stroke:#00661a;stroke-width:1}
 
-.antenna{fill:none;stroke:#0a3a0a;stroke-width:1.5}
-.antenna-active{fill:none;stroke:#00ff41;stroke-width:2;filter:url(#glow)}
-
 .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;fill:#00661a}
 .lbl-on{fill:#00ff41}
 
@@ -46,6 +51,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e14;color:#00ff4
 .dir-on{fill:rgba(0,255,65,0.7)}
 
 #signal{fill:#fff;filter:url(#sig-glow)}
+
+/* Schematic labels */
+.sch-label{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:400;fill:rgba(0,255,65,0.5);letter-spacing:1px}
+.sch-val{font-family:'JetBrains Mono',monospace;font-size:6px;font-weight:300;fill:rgba(0,255,65,0.3)}
+
+/* Dashed box for decoder */
+.decoder-box{fill:none;stroke:rgba(0,255,65,0.15);stroke-width:1;stroke-dasharray:4 3}
+.decoder-title{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:500;fill:rgba(0,255,65,0.4);letter-spacing:1.5px}
+
+/* Wire lines (schematic traces) */
+.wire{stroke:#0a3a0a;stroke-width:1.5;fill:none}
+.wire-active{stroke:#00ff41;stroke-width:1.5;fill:none;filter:url(#glow)}
+.wire-traced{stroke:#00661a;stroke-width:1.5;fill:none}
+
+/* Component symbols */
+.component{fill:none;stroke:#0a3a0a;stroke-width:1.5}
+.component-active{fill:none;stroke:#00ff41;stroke-width:2;filter:url(#glow)}
+
+/* Ground symbol */
+.gnd-line{stroke:rgba(0,255,65,0.3);stroke-width:1}
 
 @keyframes err-flash{0%{border-color:#ff3333}50%{border-color:#ff3333;box-shadow:0 0 30px rgba(255,50,50,0.3)}100%{border-color:#2a4a2a;box-shadow:none}}
 .err-flash{animation:err-flash 300ms ease-out}
@@ -56,17 +81,35 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0e14;color:#00ff4
 </head>
 <body>
 <div id="app">
-  <div id="hud"><span>MORSE 1.0</span><span>SIG TRACK</span><span>CH 01</span></div>
-  <div id="tree-area">
-    <svg id="tree-svg" preserveAspectRatio="xMidYMid meet">
+  <div id="schematic">
+    <svg id="sch-svg" preserveAspectRatio="xMidYMid meet">
       <defs>
         <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         <filter id="sig-glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
+
+      <!-- Background schematic elements -->
+      <g id="g-sch-bg"></g>
+
+      <!-- Ground (drawn early so tree renders on top) -->
+      <g id="g-ground"></g>
+
+      <!-- Output wire + headphone (drawn early so tree renders on top) -->
+      <g id="g-output"></g>
+
+      <!-- Antenna + wire to key -->
+      <g id="g-antenna"></g>
+
+      <!-- Decoder box (dashed) containing the morse tree -->
+      <g id="g-decoder"></g>
+
+      <!-- Tree edges, nodes, labels -->
       <g id="g-edges"></g>
       <g id="g-dirs"></g>
       <g id="g-nodes"></g>
       <g id="g-labels"></g>
+
+      <!-- Signal dot (always on top) -->
       <circle id="signal" cx="0" cy="0" r="3.5" display="none"/>
     </svg>
   </div>
@@ -86,84 +129,288 @@ const T=['','E','T','I','A','N','M','S','U','R','W','D','K','G','O',
   '5','4','','3','','','','2','','','','','','','','1',
   '6','','','','','','','','7','','','','8','','9','0'];
 
-const DIT_MS=200,TIMEOUT_MS=500,HOP_MS=200,VIB_MS=50;
+const DIT_MS=200,TIMEOUT_MS=500,HOP_MS=200,VIB_MS=50,AUTO_DAH_MS=2000;
 
 // ── State ──
-let st='IDLE',cur=0,sym=[],t0=0,tid=null,aid=null;
+let st='IDLE',cur=0,sym=[],t0=0,tid=null,aid=null,dahTid=null;
+
+// ── Audio (Web Audio API) ──
+let audioCtx=null,oscNode=null,gainNode=null;
+
+function initAudio(){
+  if(audioCtx)return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  gainNode=audioCtx.createGain();
+  gainNode.gain.value=0;
+  gainNode.connect(audioCtx.destination);
+  oscNode=audioCtx.createOscillator();
+  oscNode.type='sine';
+  oscNode.frequency.value=700;
+  oscNode.connect(gainNode);
+  oscNode.start();
+}
+
+function toneOn(){
+  if(!audioCtx)return;
+  gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+  gainNode.gain.setValueAtTime(0.15,audioCtx.currentTime);
+}
+
+function toneOff(){
+  if(!audioCtx)return;
+  gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+  gainNode.gain.setValueAtTime(0,audioCtx.currentTime+0.02);
+}
 
 // ── DOM ──
 const $=id=>document.getElementById(id);
-const svg=$('tree-svg'),gE=$('g-edges'),gD=$('g-dirs'),gN=$('g-nodes'),gL=$('g-labels');
+const svg=$('sch-svg');
+const gE=$('g-edges'),gD=$('g-dirs'),gN=$('g-nodes'),gL=$('g-labels');
+const gAnt=$('g-antenna'),gDec=$('g-decoder'),gOut=$('g-output'),gGnd=$('g-ground'),gSch=$('g-sch-bg');
 const sig=$('signal'),pPath=$('p-path'),pNode=$('p-node');
 const rLet=$('r-letter'),rMor=$('r-morse'),rSta=$('r-status'),key=$('key');
 const NS='http://www.w3.org/2000/svg';
 
-// ── Maze-like layout: root at left, each level full-width ──
-const VB_W=480,VB_H=500,PAD=18,NR=4,MAX_D=5,USABLE=VB_W-2*PAD;
-const LEVEL_Y=[35,110,185,260,338,425];
+// ── Layout constants ──
+const VB_W=480,VB_H=520;
+// Schematic zones
+const ANT_X=36,ANT_TOP=20,ANT_BOT=75;       // Antenna on left
+const KEY_SCH_X=36,KEY_SCH_Y=85;             // Key position in schematic
+const DECODE_X=48,DECODE_R=VB_W-12;          // Decoder box bounds
+const DECODE_TOP=100,DECODE_BOT=430;          // Decoder box top/bottom
+const GND_Y=455;                              // Ground line Y
+const OUT_X=VB_W-36,OUT_Y=GND_Y-25;          // Headphone output
+const PAD=18,NR=4,MAX_D=5;
+
+// Tree Y positions (inside decoder box)
+const TREE_TOP=DECODE_TOP+18;
+const LEVEL_Y=[];
+for(let i=0;i<=5;i++)LEVEL_Y.push(TREE_TOP+i*((DECODE_BOT-TREE_TOP-20)/5));
 
 function lvl(i){return Math.floor(Math.log2(i+1))}
 function has(i){if(i>=T.length)return false;if(T[i]!=='')return true;return has(2*i+1)||has(2*i+2)}
 
-// Deterministic jitter per node index
-function jitt(i){let h=i*2654435761>>>0;h=((h>>16)^h)*45679>>>0;return((h>>16)^h&0xffff)/0xffff-0.5}
-
+const USABLE=DECODE_R-DECODE_X-2*PAD;
 const pos={};
+
 function layout(){
-  // Two-pass: levels 0-3 get even spacing, levels 4-5 cluster children under parents
+  // Levels 0-3: even spacing inside decoder box
   for(let d=0;d<=3;d++){
     const start=(1<<d)-1,count=1<<d;
     const y=LEVEL_Y[d];
     const nodes=[];
     for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
     const n=nodes.length;if(!n)continue;
-    if(d===0){pos[nodes[0]]={x:PAD+14,y}}
+    if(d===0){pos[nodes[0]]={x:DECODE_X+USABLE/2,y}}
     else{
       const sp=USABLE/(n+1);
-      nodes.forEach((idx,i)=>{pos[idx]={x:PAD+sp*(i+1),y}});
+      nodes.forEach((idx,i)=>{pos[idx]={x:DECODE_X+PAD+sp*(i+1),y}});
     }
   }
-  // Level 4: even spacing (same as before, no jitter issues here)
+  // Level 4: even spacing
   {
     const y=LEVEL_Y[4],start=15,count=16;
     const nodes=[];
     for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
     const n=nodes.length;
     const sp=USABLE/(n+1);
-    nodes.forEach((idx,i)=>{pos[idx]={x:PAD+sp*(i+1),y}});
+    nodes.forEach((idx,i)=>{pos[idx]={x:DECODE_X+PAD+sp*(i+1),y}});
   }
-  // Level 5: cluster children under parents, with overlap resolution
+  // Level 5: cluster children under parents
   {
     const y=LEVEL_Y[5],start=31,count=32;
     const nodes=[];
     for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
-    // Sort by parent x position to process left-to-right
     nodes.sort((a,b)=>{
       const pa=a%2===0?(a-2)/2:(a-1)/2;
       const pb=b%2===0?(b-2)/2:(b-1)/2;
       return pos[pa].x-pos[pb].x||a-b;
     });
     const GAP=28,MIN=16;
-    // Initial placement: clustered under parent, dit left dah right
     nodes.forEach(idx=>{
       const p=idx%2===0?(idx-2)/2:(idx-1)/2;
       const isDah=idx%2===0;
       const px=pos[p]?pos[p].x:VB_W/2;
       pos[idx]={x:px+(isDah?GAP/2:-GAP/2),y};
     });
-    // Push apart any overlaps (left-to-right sweep)
     for(let i=1;i<nodes.length;i++){
       const prev=pos[nodes[i-1]].x,cur=pos[nodes[i]].x;
       if(cur-prev<MIN)pos[nodes[i]].x=prev+MIN;
     }
-    // Right-to-left sweep for right-edge clamp
     for(let i=nodes.length-2;i>=0;i--){
       const next=pos[nodes[i+1]].x,cur=pos[nodes[i]].x;
       if(next-cur<MIN)pos[nodes[i]].x=next-MIN;
     }
   }
-  // Clamp all positions to stay within bounds
-  Object.values(pos).forEach(p=>{p.x=Math.max(PAD+6,Math.min(VB_W-PAD-6,p.x))});
+  Object.values(pos).forEach(p=>{p.x=Math.max(DECODE_X+PAD+6,Math.min(DECODE_R-PAD-6,p.x))});
+}
+
+// ── Draw schematic background ──
+function drawSchematic(){
+  gSch.innerHTML='';gAnt.innerHTML='';gDec.innerHTML='';gOut.innerHTML='';gGnd.innerHTML='';
+
+  // Component labels (scattered around like a real schematic)
+  const labels=[
+    {x:3,y:14,t:'ANT',c:'sch-label'},
+    {x:DECODE_X+4,y:DECODE_TOP-4,t:'DECODER  U1',c:'decoder-title'},
+    {x:OUT_X-14,y:OUT_Y+16,t:'OUT',c:'sch-label'},
+    {x:VB_W/2-12,y:GND_Y+14,t:'GND',c:'sch-label'},
+    {x:3,y:KEY_SCH_Y+14,t:'KEY',c:'sch-label'},
+    {x:VB_W-72,y:12,t:'MORSE 1.0',c:'sch-label'},
+  ];
+  labels.forEach(l=>{
+    const t=document.createElementNS(NS,'text');
+    t.setAttribute('x',l.x);t.setAttribute('y',l.y);
+    t.setAttribute('class',l.c);t.textContent=l.t;
+    gSch.appendChild(t);
+  });
+
+  // ── Antenna (left side) ──
+  // Antenna mast
+  const antMast=document.createElementNS(NS,'line');
+  antMast.setAttribute('x1',ANT_X);antMast.setAttribute('y1',ANT_BOT);
+  antMast.setAttribute('x2',ANT_X);antMast.setAttribute('y2',ANT_TOP+10);
+  antMast.setAttribute('class','wire');antMast.dataset.sch='ant-mast';
+  gAnt.appendChild(antMast);
+
+  // Antenna arms (V shape)
+  const antArm1=document.createElementNS(NS,'line');
+  antArm1.setAttribute('x1',ANT_X);antArm1.setAttribute('y1',ANT_TOP+10);
+  antArm1.setAttribute('x2',ANT_X-12);antArm1.setAttribute('y2',ANT_TOP);
+  antArm1.setAttribute('class','wire');antArm1.dataset.sch='ant-arm';
+  gAnt.appendChild(antArm1);
+
+  const antArm2=document.createElementNS(NS,'line');
+  antArm2.setAttribute('x1',ANT_X);antArm2.setAttribute('y1',ANT_TOP+10);
+  antArm2.setAttribute('x2',ANT_X+12);antArm2.setAttribute('y2',ANT_TOP);
+  antArm2.setAttribute('class','wire');antArm2.dataset.sch='ant-arm';
+  gAnt.appendChild(antArm2);
+
+  // Signal waves (3 arcs emanating from antenna)
+  for(let i=1;i<=3;i++){
+    const arc=document.createElementNS(NS,'path');
+    const r=6+i*5;
+    arc.setAttribute('d',`M${ANT_X} ${ANT_TOP+10-r+3} A${r} ${r} 0 0 1 ${ANT_X} ${ANT_TOP+10+r-3}`);
+    arc.setAttribute('fill','none');arc.setAttribute('stroke','rgba(0,255,65,0.08)');
+    arc.setAttribute('stroke-width','1');arc.dataset.sch='ant-wave';
+    gAnt.appendChild(arc);
+  }
+
+  // Wire from antenna to key
+  const w1=document.createElementNS(NS,'path');
+  w1.setAttribute('d',`M${ANT_X} ${ANT_BOT} L${ANT_X} ${KEY_SCH_Y}`);
+  w1.setAttribute('class','wire');w1.dataset.sch='wire-ant-key';
+  gAnt.appendChild(w1);
+
+  // Key symbol (switch): a gap with a lever
+  const keyBase=document.createElementNS(NS,'circle');
+  keyBase.setAttribute('cx',ANT_X);keyBase.setAttribute('cy',KEY_SCH_Y);
+  keyBase.setAttribute('r','3');keyBase.setAttribute('class','nd');
+  keyBase.dataset.sch='key-left';gAnt.appendChild(keyBase);
+
+  const keyTip=document.createElementNS(NS,'circle');
+  keyTip.setAttribute('cx',ANT_X+30);keyTip.setAttribute('cy',KEY_SCH_Y);
+  keyTip.setAttribute('r','3');keyTip.setAttribute('class','nd');
+  keyTip.dataset.sch='key-right';gAnt.appendChild(keyTip);
+
+  // Lever (angled line, like a real telegraph key)
+  const keyLever=document.createElementNS(NS,'line');
+  keyLever.setAttribute('x1',ANT_X);keyLever.setAttribute('y1',KEY_SCH_Y);
+  keyLever.setAttribute('x2',ANT_X+28);keyLever.setAttribute('y2',KEY_SCH_Y-6);
+  keyLever.setAttribute('class','wire');keyLever.dataset.sch='key-lever';
+  gAnt.appendChild(keyLever);
+
+  // Wire from key to decoder box entry point
+  const rootX=pos[0]?pos[0].x:VB_W/2;
+  const w2=document.createElementNS(NS,'path');
+  w2.setAttribute('d',`M${ANT_X+30} ${KEY_SCH_Y} L${rootX-20} ${KEY_SCH_Y} L${rootX-20} ${DECODE_TOP} L${rootX} ${DECODE_TOP+8}`);
+  w2.setAttribute('class','wire');w2.dataset.sch='wire-key-dec';
+  gAnt.appendChild(w2);
+
+  // ── Decoder box (dashed rectangle) ──
+  const box=document.createElementNS(NS,'rect');
+  box.setAttribute('x',DECODE_X);box.setAttribute('y',DECODE_TOP);
+  box.setAttribute('width',DECODE_R-DECODE_X);box.setAttribute('height',DECODE_BOT-DECODE_TOP);
+  box.setAttribute('rx','4');box.setAttribute('class','decoder-box');
+  gDec.appendChild(box);
+
+  // Pin dots on left and right of decoder box
+  // Left pin (input)
+  const pinIn=document.createElementNS(NS,'circle');
+  pinIn.setAttribute('cx',DECODE_X);pinIn.setAttribute('cy',DECODE_TOP+10);
+  pinIn.setAttribute('r','2');pinIn.setAttribute('fill','rgba(0,255,65,0.3)');
+  gDec.appendChild(pinIn);
+
+  // Right pin (output)
+  const pinOut=document.createElementNS(NS,'circle');
+  pinOut.setAttribute('cx',DECODE_R);pinOut.setAttribute('cy',DECODE_TOP+10);
+  pinOut.setAttribute('r','2');pinOut.setAttribute('fill','rgba(0,255,65,0.3)');
+  gDec.appendChild(pinOut);
+
+  // ── Output wire from decoder to headphone ──
+  const outWire=document.createElementNS(NS,'path');
+  outWire.setAttribute('d',`M${DECODE_R} ${DECODE_TOP+10} L${OUT_X+15} ${DECODE_TOP+10} L${OUT_X+15} ${OUT_Y}`);
+  outWire.setAttribute('class','wire');outWire.dataset.sch='wire-out';
+  gOut.appendChild(outWire);
+
+  // ── Headphone icon (right side) ──
+  // Headband arc
+  const hpBand=document.createElementNS(NS,'path');
+  hpBand.setAttribute('d',`M${OUT_X-2} ${OUT_Y+2} A14 14 0 0 1 ${OUT_X+26} ${OUT_Y+2}`);
+  hpBand.setAttribute('fill','none');hpBand.setAttribute('stroke','#0a3a0a');
+  hpBand.setAttribute('stroke-width','2');hpBand.dataset.sch='hp-band';
+  gOut.appendChild(hpBand);
+
+  // Left earpiece
+  const hpL=document.createElementNS(NS,'rect');
+  hpL.setAttribute('x',OUT_X-5);hpL.setAttribute('y',OUT_Y);
+  hpL.setAttribute('width','7');hpL.setAttribute('height','10');
+  hpL.setAttribute('rx','2');hpL.setAttribute('class','component');
+  hpL.dataset.sch='hp-left';gOut.appendChild(hpL);
+
+  // Right earpiece
+  const hpR=document.createElementNS(NS,'rect');
+  hpR.setAttribute('x',OUT_X+22);hpR.setAttribute('y',OUT_Y);
+  hpR.setAttribute('width','7');hpR.setAttribute('height','10');
+  hpR.setAttribute('rx','2');hpR.setAttribute('class','component');
+  hpR.dataset.sch='hp-right';gOut.appendChild(hpR);
+
+  // ── Ground bus (bottom) ──
+  // Main ground line
+  const gndMain=document.createElementNS(NS,'line');
+  gndMain.setAttribute('x1',15);gndMain.setAttribute('y1',GND_Y);
+  gndMain.setAttribute('x2',VB_W-15);gndMain.setAttribute('y2',GND_Y);
+  gndMain.setAttribute('class','gnd-line');gGnd.appendChild(gndMain);
+
+  // Ground symbol (3 horizontal lines, decreasing width)
+  const gndCx=VB_W/2;
+  for(let i=0;i<3;i++){
+    const w=20-i*6;
+    const gl=document.createElementNS(NS,'line');
+    gl.setAttribute('x1',gndCx-w/2);gl.setAttribute('y1',GND_Y+4+i*4);
+    gl.setAttribute('x2',gndCx+w/2);gl.setAttribute('y2',GND_Y+4+i*4);
+    gl.setAttribute('class','gnd-line');gGnd.appendChild(gl);
+  }
+
+  // Vertical stub from ground symbol up to ground line
+  const gndStub=document.createElementNS(NS,'line');
+  gndStub.setAttribute('x1',gndCx);gndStub.setAttribute('y1',GND_Y);
+  gndStub.setAttribute('x2',gndCx);gndStub.setAttribute('y2',GND_Y+4);
+  gndStub.setAttribute('class','gnd-line');gGnd.appendChild(gndStub);
+
+  // Ground return from key area (thin, behind everything)
+  const gndRet=document.createElementNS(NS,'path');
+  gndRet.setAttribute('d',`M${ANT_X} ${KEY_SCH_Y} L${ANT_X} ${GND_Y}`);
+  gndRet.setAttribute('stroke','rgba(0,255,65,0.12)');gndRet.setAttribute('stroke-width','1');
+  gndRet.setAttribute('fill','none');gndRet.dataset.sch='wire-gnd-ret';
+  gGnd.appendChild(gndRet);
+
+  // Ground return from output (thin, behind everything)
+  const gndRetOut=document.createElementNS(NS,'path');
+  gndRetOut.setAttribute('d',`M${OUT_X+15} ${OUT_Y+8} L${OUT_X+15} ${GND_Y}`);
+  gndRetOut.setAttribute('stroke','rgba(0,255,65,0.12)');gndRetOut.setAttribute('stroke-width','1');
+  gndRetOut.setAttribute('fill','none');gndRetOut.dataset.sch='wire-gnd-out';
+  gGnd.appendChild(gndRetOut);
 }
 
 // Edge offsets from node center
@@ -179,7 +426,7 @@ function waypoints(fi,ti){
 
 function pathD(pts){return`M${pts[0].x} ${pts[0].y}L${pts[1].x} ${pts[1].y}L${pts[2].x} ${pts[2].y}L${pts[3].x} ${pts[3].y}`}
 
-// ── Render ──
+// ── Render tree ──
 function render(){
   gE.innerHTML='';gD.innerHTML='';gN.innerHTML='';gL.innerHTML='';
 
@@ -190,7 +437,6 @@ function render(){
     const isDah=i>0&&i%2===0;
     const isLetter=T[i]!=='';
 
-    // Edges + direction labels
     for(const[ci,dir]of[[2*i+1,'·'],[2*i+2,'−']]){
       if(!has(ci)||!pos[ci])continue;
       const pts=waypoints(i,ci);
@@ -198,7 +444,6 @@ function render(){
       p.setAttribute('d',pathD(pts));p.setAttribute('class','edge');
       p.dataset.from=i;p.dataset.to=ci;gE.appendChild(p);
 
-      // Direction label on horizontal segment midpoint
       const lx=(x+pos[ci].x)/2;
       const ly=pts[1].y;
       const fs=d<3?13:d<4?10:8;
@@ -213,16 +458,11 @@ function render(){
 
     // Node shape
     if(i===0){
+      // Root: antenna-style triangle inside decoder
       const a=document.createElementNS(NS,'path');
       a.setAttribute('d',`M${x} ${y-10}L${x-7} ${y+4}L${x+7} ${y+4}Z`);
-      a.setAttribute('class','antenna');a.dataset.node=0;gN.appendChild(a);
-      const arc=document.createElementNS(NS,'path');
-      arc.setAttribute('d',`M${x-5} ${y-14}A6 6 0 0 1 ${x+5} ${y-14}`);
-      arc.setAttribute('fill','none');arc.setAttribute('stroke','#0a3a0a');
-      arc.setAttribute('stroke-width','1.5');
-      arc.setAttribute('class','antenna');arc.dataset.node='arc';gN.appendChild(arc);
+      a.setAttribute('class','nd');a.dataset.node=0;gN.appendChild(a);
     }else if(isLetter){
-      // Letter node: dot (circle) for dit, line (rect) for dah
       if(isDah){
         const r=document.createElementNS(NS,'rect');
         r.setAttribute('x',x-6);r.setAttribute('y',y-2);
@@ -234,7 +474,6 @@ function render(){
         c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',NR);
         c.setAttribute('class','nd');c.dataset.node=i;gN.appendChild(c);
       }
-      // Letter label
       const t=document.createElementNS(NS,'text');
       t.setAttribute('x',x);t.setAttribute('y',y+NR+11);
       t.setAttribute('text-anchor','middle');
@@ -242,7 +481,6 @@ function render(){
       t.setAttribute('class','lbl');t.dataset.label=i;
       t.textContent=T[i];gL.appendChild(t);
     }else{
-      // Junction node (empty, has subtree): smaller shape
       if(isDah){
         const r=document.createElementNS(NS,'rect');
         r.setAttribute('x',x-4);r.setAttribute('y',y-1.5);
@@ -258,9 +496,9 @@ function render(){
   }
 }
 
-// ── Visual update ──
+// ── Visual update (tree + schematic wires) ──
 function updateVis(){
-  // Reset ALL elements via data attributes (not CSS class selectors)
+  // Reset tree elements
   gE.querySelectorAll('path').forEach(e=>e.className.baseVal='edge');
   gN.querySelectorAll('[data-node]').forEach(e=>{
     const n=e.dataset.node;
@@ -269,7 +507,29 @@ function updateVis(){
   gL.querySelectorAll('text').forEach(e=>e.className.baseVal='lbl');
   gD.querySelectorAll('text').forEach(e=>e.className.baseVal='dir');
 
-  // Highlight traced path
+  // Reset schematic wires (skip ant-wave, uses inline stroke)
+  gAnt.querySelectorAll('[data-sch]').forEach(e=>{
+    if(e.dataset.sch==='ant-wave'){
+      e.setAttribute('stroke','rgba(0,255,65,0.08)');
+      return;
+    }
+    if(e.tagName==='line'||e.tagName==='path'){
+      e.className.baseVal='wire';
+    }else if(e.classList.contains('component')){
+      e.className.baseVal='component';
+    }else if(e.dataset.node!==undefined){
+      e.className.baseVal='nd';
+    }
+  });
+  gOut.querySelectorAll('[data-sch]').forEach(e=>{
+    if(e.tagName==='line'||e.tagName==='path'){
+      e.className.baseVal='wire';
+    }else{
+      e.className.baseVal='component';
+    }
+  });
+
+  // Highlight traced path in tree
   for(let d=0;d<sym.length;d++){
     const from=d===0?0:nodeAt(sym.slice(0,d));
     const to=nodeAt(sym.slice(0,d+1));
@@ -277,7 +537,7 @@ function updateVis(){
     const e=gE.querySelector(`[data-from="${from}"][data-to="${to}"]`);
     if(e)e.className.baseVal='edge-traced';
     const n=gN.querySelector(`[data-node="${from}"]`);
-    if(n)n.className.baseVal=from===0?'antenna-active':'nd-visited';
+    if(n)n.className.baseVal='nd-visited';
     const l=gL.querySelector(`[data-label="${from}"]`);
     if(l)l.className.baseVal='lbl lbl-on';
     const dr=gD.querySelector(`[data-dir="${from}-${to}"]`);
@@ -296,6 +556,33 @@ function updateVis(){
     if(l)l.className.baseVal='lbl lbl-on';
     const dr=gD.querySelector(`[data-dir="${pi}-${ci}"]`);
     if(dr)dr.className.baseVal='dir dir-on';
+
+    // Light up schematic wires: antenna -> key -> decoder
+    const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
+    if(wireAntKey)wireAntKey.className.baseVal='wire-active';
+    const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
+    if(wireKeyDec)wireKeyDec.className.baseVal='wire-active';
+    const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
+    if(keyLever)keyLever.className.baseVal='wire-active';
+    const keyL=gAnt.querySelector('[data-sch="key-left"]');
+    if(keyL)keyL.className.baseVal='nd-active';
+    const keyR=gAnt.querySelector('[data-sch="key-right"]');
+    if(keyR)keyR.className.baseVal='nd-active';
+    const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
+    if(antMast)antMast.className.baseVal='wire-active';
+    const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
+    antA.forEach(a=>a.className.baseVal='wire-active');
+    const antW=gAnt.querySelectorAll('[data-sch="ant-wave"]');
+    antW.forEach(w=>w.setAttribute('stroke','rgba(0,255,65,0.35)'));
+
+    // If resolved letter, light up output wire + headphone
+    if(T[ci]!==''){
+      const wireOut=gOut.querySelector('[data-sch="wire-out"]');
+      if(wireOut)wireOut.className.baseVal='wire-active';
+      gOut.querySelectorAll('[data-sch]').forEach(e=>{
+        if(e.classList.contains('component'))e.className.baseVal='component-active';
+      });
+    }
   }
 }
 
@@ -374,11 +661,13 @@ function complete(){
 
 function reset(){
   clearTimeout(tid);
+  clearTimeout(dahTid);
   if(aid)cancelAnimationFrame(aid);
   cur=0;sym=[];st='IDLE';
   pPath.textContent='PATH: --';pNode.textContent='NODE: 0/5';
   rLet.textContent='';rMor.textContent='';rSta.textContent='READY';
   sig.setAttribute('display','none');
+  toneOff();
   updateVis();
 }
 
@@ -389,14 +678,34 @@ function down(){
   clearTimeout(tid);
   t0=performance.now();st='TIMING';
   key.classList.add('pressed');
+  initAudio();toneOn();
+  // Auto-dah after 2s if key is held too long
+  clearTimeout(dahTid);
+  dahTid=setTimeout(()=>{
+    if(st==='TIMING')up();
+  },AUTO_DAH_MS);
+  // Light up antenna + key on first touch
   if(cur===0&&sym.length===0){
-    gN.querySelectorAll('[data-node="0"],[data-node="arc"]').forEach(e=>e.className.baseVal='antenna-active');
+    const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
+    if(antMast)antMast.className.baseVal='wire-active';
+    const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
+    antA.forEach(a=>a.className.baseVal='wire-active');
+    const antW=gAnt.querySelectorAll('[data-sch="ant-wave"]');
+    antW.forEach(w=>w.setAttribute('stroke','rgba(0,255,65,0.35)'));
+    const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
+    if(keyLever)keyLever.className.baseVal='wire-active';
+    const keyL=gAnt.querySelector('[data-sch="key-left"]');
+    if(keyL)keyL.className.baseVal='nd-active';
+    const keyR=gAnt.querySelector('[data-sch="key-right"]');
+    if(keyR)keyR.className.baseVal='nd-active';
   }
 }
 
 function up(){
   if(st!=='TIMING')return;
+  clearTimeout(dahTid);
   key.classList.remove('pressed');
+  toneOff();
   const dir=(performance.now()-t0)<DIT_MS?'·':'−';
   if(navigator.vibrate)navigator.vibrate(VIB_MS);
   advance(dir);
@@ -412,7 +721,7 @@ document.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();up
 
 // ── Init ──
 svg.setAttribute('viewBox',`0 0 ${VB_W} ${VB_H}`);
-layout();render();
+layout();drawSchematic();render();
 </script>
 </body>
 </html>
