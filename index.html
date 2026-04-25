@@ -176,10 +176,10 @@ const VB_W=480,VB_H=520;
 // Schematic zones
 const ANT_X=36,ANT_TOP=20,ANT_BOT=75;       // Antenna on left
 const KEY_SCH_X=36,KEY_SCH_Y=85;             // Key position in schematic
-const DECODE_X=48,DECODE_R=VB_W-12;          // Decoder box bounds
-const DECODE_TOP=100,DECODE_BOT=430;          // Decoder box top/bottom
-const GND_Y=455;                              // Ground line Y
-const OUT_X=VB_W-36,OUT_Y=GND_Y-25;          // Headphone output
+const DECODE_X=48,DECODE_R=VB_W-40;          // Decoder box bounds (room for output wire)
+const DECODE_TOP=100,DECODE_BOT=410;          // Decoder box top/bottom
+const GND_Y=462;                              // Ground line Y
+const OUT_X=VB_W-36,OUT_Y=GND_Y-20;          // Headphone output
 const PAD=18,NR=4,MAX_D=5;
 
 // Tree Y positions (inside decoder box)
@@ -349,7 +349,7 @@ function drawSchematic(){
 
   // ── Output wire from decoder to headphone ──
   const outWire=document.createElementNS(NS,'path');
-  outWire.setAttribute('d',`M${DECODE_R} ${DECODE_TOP+10} L${OUT_X+15} ${DECODE_TOP+10} L${OUT_X+15} ${OUT_Y}`);
+  outWire.setAttribute('d',`M${DECODE_R} ${DECODE_TOP+10} L${DECODE_R+8} ${DECODE_TOP+10} L${DECODE_R+8} ${OUT_Y} L${OUT_X+12} ${OUT_Y}`);
   outWire.setAttribute('class','wire');outWire.dataset.sch='wire-out';
   gOut.appendChild(outWire);
 
@@ -407,7 +407,7 @@ function drawSchematic(){
 
   // Ground return from output (thin, behind everything)
   const gndRetOut=document.createElementNS(NS,'path');
-  gndRetOut.setAttribute('d',`M${OUT_X+15} ${OUT_Y+8} L${OUT_X+15} ${GND_Y}`);
+  gndRetOut.setAttribute('d',`M${DECODE_R+8} ${OUT_Y+10} L${DECODE_R+8} ${GND_Y}`);
   gndRetOut.setAttribute('stroke','rgba(0,255,65,0.12)');gndRetOut.setAttribute('stroke-width','1');
   gndRetOut.setAttribute('fill','none');gndRetOut.dataset.sch='wire-gnd-out';
   gGnd.appendChild(gndRetOut);
@@ -475,7 +475,7 @@ function render(){
         c.setAttribute('class','nd');c.dataset.node=i;gN.appendChild(c);
       }
       const t=document.createElementNS(NS,'text');
-      t.setAttribute('x',x);t.setAttribute('y',y+NR+11);
+      t.setAttribute('x',x+6);t.setAttribute('y',y+NR+11);
       t.setAttribute('text-anchor','middle');
       t.setAttribute('dominant-baseline','central');
       t.setAttribute('class','lbl');t.dataset.label=i;
@@ -692,6 +692,8 @@ function down(){
     antA.forEach(a=>a.className.baseVal='wire-active');
     const antW=gAnt.querySelectorAll('[data-sch="ant-wave"]');
     antW.forEach(w=>w.setAttribute('stroke','rgba(0,255,65,0.35)'));
+    const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
+    if(wireAntKey)wireAntKey.className.baseVal='wire-active';
     const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
     if(keyLever)keyLever.className.baseVal='wire-active';
     const keyL=gAnt.querySelector('[data-sch="key-left"]');
