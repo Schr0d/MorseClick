@@ -496,23 +496,18 @@ function updateVis(){
   gL.querySelectorAll('text').forEach(e=>e.className.baseVal='lbl');
   gD.querySelectorAll('text').forEach(e=>e.className.baseVal='dir');
 
-  // Reset schematic wires (use direct attributes, not class)
+  // Reset schematic wires (inline style overrides CSS class)
   gAnt.querySelectorAll('[data-sch]').forEach(e=>{
-    const s=e.dataset.sch;
     if(e.tagName==='line'||e.tagName==='path'){
-      e.setAttribute('stroke','#0a3a0a');e.setAttribute('stroke-width','1.5');
-      e.removeAttribute('filter');
+      e.style.stroke='#0a3a0a';e.style.strokeWidth='1.5';
+      e.style.filter='none';
     }else if(e.dataset.node!==undefined){
-      e.setAttribute('fill','#0a3a0a');e.setAttribute('stroke','#0a3a0a');
-      e.removeAttribute('filter');
+      e.style.fill='#0a3a0a';e.style.stroke='#0a3a0a';
+      e.style.filter='none';
     }
   });
   gOut.querySelectorAll('[data-sch]').forEach(e=>{
-    if(e.tagName==='path'){
-      e.setAttribute('stroke','#0a3a0a');e.removeAttribute('filter');
-    }else{
-      e.setAttribute('stroke','#0a3a0a');e.removeAttribute('filter');
-    }
+    e.style.stroke='#0a3a0a';e.style.filter='none';
   });
 
   // Highlight traced path in tree
@@ -545,26 +540,26 @@ function updateVis(){
 
     // Light up schematic wires: antenna -> key -> decoder
     const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
-    if(wireAntKey){wireAntKey.setAttribute('stroke','#00ff41');wireAntKey.setAttribute('filter','url(#glow)');}
+    if(wireAntKey){wireAntKey.style.stroke='#00ff41';wireAntKey.style.filter='url(#glow)';}
     const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
-    if(wireKeyDec){wireKeyDec.setAttribute('stroke','#00ff41');wireKeyDec.setAttribute('filter','url(#glow)');}
+    if(wireKeyDec){wireKeyDec.style.stroke='#00ff41';wireKeyDec.style.filter='url(#glow)';}
     const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
-    if(keyLever){keyLever.setAttribute('stroke','#00ff41');keyLever.setAttribute('filter','url(#glow)');}
+    if(keyLever){keyLever.style.stroke='#00ff41';keyLever.style.filter='url(#glow)';}
     const keyL=gAnt.querySelector('[data-sch="key-left"]');
-    if(keyL){keyL.setAttribute('fill','#00ff41');keyL.setAttribute('stroke','#00ff41');keyL.setAttribute('filter','url(#glow)');}
+    if(keyL){keyL.style.fill='#00ff41';keyL.style.stroke='#00ff41';keyL.style.filter='url(#glow)';}
     const keyR=gAnt.querySelector('[data-sch="key-right"]');
-    if(keyR){keyR.setAttribute('fill','#00ff41');keyR.setAttribute('stroke','#00ff41');keyR.setAttribute('filter','url(#glow)');}
+    if(keyR){keyR.style.fill='#00ff41';keyR.style.stroke='#00ff41';keyR.style.filter='url(#glow)';}
     const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
-    if(antMast){antMast.setAttribute('stroke','#00ff41');antMast.setAttribute('filter','url(#glow)');}
+    if(antMast){antMast.style.stroke='#00ff41';antMast.style.filter='url(#glow)';}
     const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
-    antA.forEach(a=>{a.setAttribute('stroke','#00ff41');a.setAttribute('filter','url(#glow)');});
+    antA.forEach(a=>{a.style.stroke='#00ff41';a.style.filter='url(#glow)';});
 
     // If resolved letter, light up output wire + headphone
     if(T[ci]!==''){
       const wireOut=gOut.querySelector('[data-sch="wire-out"]');
-      if(wireOut){wireOut.setAttribute('stroke','#00ff41');wireOut.setAttribute('filter','url(#glow)');}
+      if(wireOut){wireOut.style.stroke='#00ff41';wireOut.style.filter='url(#glow)';}
       gOut.querySelectorAll('[data-sch]').forEach(e=>{
-        e.setAttribute('stroke','#00ff41');e.setAttribute('filter','url(#glow)');
+        e.style.stroke='#00ff41';e.style.filter='url(#glow)';
       });
     }
   }
@@ -668,21 +663,21 @@ function down(){
   // Light up antenna + key on first touch
   if(cur===0&&sym.length===0){
     const antMast=gAnt.querySelector('[data-sch="ant-mast"]');
-    if(antMast){antMast.setAttribute('stroke','#00ff41');antMast.setAttribute('filter','url(#glow)');}
+    if(antMast){antMast.style.stroke='#00ff41';antMast.style.filter='url(#glow)';}
     const antA=gAnt.querySelectorAll('[data-sch="ant-arm"]');
-    antA.forEach(a=>{a.setAttribute('stroke','#00ff41');a.setAttribute('filter','url(#glow)');});
+    antA.forEach(a=>{a.style.stroke='#00ff41';a.style.filter='url(#glow)';});
     const wireAntKey=gAnt.querySelector('[data-sch="wire-ant-key"]');
-    if(wireAntKey){wireAntKey.setAttribute('stroke','#00ff41');wireAntKey.setAttribute('filter','url(#glow)');}
+    if(wireAntKey){wireAntKey.style.stroke='#00ff41';wireAntKey.style.filter='url(#glow)';}
     const keyLever=gAnt.querySelector('[data-sch="key-lever"]');
-    if(keyLever){keyLever.setAttribute('stroke','#00ff41');keyLever.setAttribute('filter','url(#glow)');}
+    if(keyLever){keyLever.style.stroke='#00ff41';keyLever.style.filter='url(#glow)';}
     const keyL=gAnt.querySelector('[data-sch="key-left"]');
-    if(keyL){keyL.setAttribute('fill','#00ff41');keyL.setAttribute('stroke','#00ff41');keyL.setAttribute('filter','url(#glow)');}
+    if(keyL){keyL.style.fill='#00ff41';keyL.style.stroke='#00ff41';keyL.style.filter='url(#glow)';}
     const keyR=gAnt.querySelector('[data-sch="key-right"]');
-    if(keyR){keyR.setAttribute('fill','#00ff41');keyR.setAttribute('stroke','#00ff41');keyR.setAttribute('filter','url(#glow)');}
+    if(keyR){keyR.style.fill='#00ff41';keyR.style.stroke='#00ff41';keyR.style.filter='url(#glow)';}
     const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
-    if(wireKeyDec){wireKeyDec.setAttribute('stroke','#00ff41');wireKeyDec.setAttribute('filter','url(#glow)');}
+    if(wireKeyDec){wireKeyDec.style.stroke='#00ff41';wireKeyDec.style.filter='url(#glow)';}
     const rootNode=gN.querySelector('[data-node="0"]');
-    if(rootNode){rootNode.setAttribute('fill','#00ff41');rootNode.setAttribute('stroke','#00ff41');rootNode.setAttribute('filter','url(#glow)');}
+    if(rootNode){rootNode.style.fill='#00ff41';rootNode.style.stroke='#00ff41';rootNode.style.filter='url(#glow)';}
   }
 }
 
