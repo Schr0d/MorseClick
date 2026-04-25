@@ -129,7 +129,12 @@ const T=['','E','T','I','A','N','M','S','U','R','W','D','K','G','O',
   '5','4','','3','','','','2','','','','','','','','1',
   '6','','','','','','','','7','','','','8','','9','0'];
 
-const DIT_MS=200,TIMEOUT_MS=500,HOP_MS=200,VIB_MS=50,AUTO_DAH_MS=2000;
+const HOP_MS=200,VIB_MS=50,AUTO_DAH_MS=2000;
+// Adaptive timing: learn user's dit rhythm, derive threshold and gap
+const DIT_BUF=8;
+let ditBuf=[];
+function th(){if(!ditBuf.length)return 200;const a=ditBuf.reduce((s,v)=>s+v,0)/ditBuf.length;return Math.max(100,a*2)}
+function gap(){if(!ditBuf.length)return 500;const a=ditBuf.reduce((s,v)=>s+v,0)/ditBuf.length;return Math.max(250,a*3)}
 
 // ── State ──
 let st='IDLE',cur=0,sym=[],t0=0,tid=null,aid=null,dahTid=null;
@@ -601,7 +606,7 @@ function advance(dir){
 
     st='WAIT';
     clearTimeout(tid);
-    tid=setTimeout(complete,TIMEOUT_MS);
+    tid=setTimeout(complete,gap());
   });
 }
 
@@ -671,7 +676,9 @@ function up(){
   if(keyLever){keyLever.style.stroke='#0a3a0a';keyLever.style.filter='none';}
   const wireKeyDec=gAnt.querySelector('[data-sch="wire-key-dec"]');
   if(wireKeyDec){wireKeyDec.style.stroke='#0a3a0a';wireKeyDec.style.filter='none';}
-  const dir=(performance.now()-t0)<DIT_MS?'·':'−';
+  const dur=performance.now()-t0;
+  const dir=dur<th()?'·':'−';
+  if(dir==='·'){ditBuf.push(dur);if(ditBuf.length>DIT_BUF)ditBuf.shift();}
   if(navigator.vibrate)navigator.vibrate(VIB_MS);
   advance(dir);
 }
