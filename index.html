@@ -676,10 +676,12 @@ function up(){
   advance(dir);
 }
 
-key.addEventListener('pointerdown',e=>{e.preventDefault();down()});
+key.addEventListener('pointerdown',e=>{e.preventDefault();key.setPointerCapture(e.pointerId);down()});
 key.addEventListener('pointerup',e=>{e.preventDefault();up()});
 key.addEventListener('pointercancel',e=>{e.preventDefault();up()});
+key.addEventListener('contextmenu',e=>e.preventDefault());
 key.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+key.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat){e.preventDefault();down()}});
 document.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();up()}});
