@@ -110,25 +110,60 @@ function jitt(i){let h=i*2654435761>>>0;h=((h>>16)^h)*45679>>>0;return((h>>16)^h
 
 const pos={};
 function layout(){
-  for(let d=0;d<=MAX_D;d++){
+  // Two-pass: levels 0-3 get even spacing, levels 4-5 cluster children under parents
+  for(let d=0;d<=3;d++){
     const start=(1<<d)-1,count=1<<d;
-    const y=LEVEL_Y[d]||TP+d*80;
+    const y=LEVEL_Y[d];
     const nodes=[];
     for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
     const n=nodes.length;if(!n)continue;
-
-    if(d===0){
-      // Root: signal input at left edge
-      pos[nodes[0]]={x:PAD+14,y};
-    }else{
-      // Even spacing across full width + jitter
+    if(d===0){pos[nodes[0]]={x:PAD+14,y}}
+    else{
       const sp=USABLE/(n+1);
-      const jAmt=Math.min(0.2,0.15-d*0.02); // less jitter at deeper levels
-      nodes.forEach((idx,i)=>{
-        pos[idx]={x:PAD+sp*(i+1)+jitt(idx)*sp*jAmt,y};
-      });
+      nodes.forEach((idx,i)=>{pos[idx]={x:PAD+sp*(i+1),y}});
     }
   }
+  // Level 4: even spacing (same as before, no jitter issues here)
+  {
+    const y=LEVEL_Y[4],start=15,count=16;
+    const nodes=[];
+    for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
+    const n=nodes.length;
+    const sp=USABLE/(n+1);
+    nodes.forEach((idx,i)=>{pos[idx]={x:PAD+sp*(i+1),y}});
+  }
+  // Level 5: cluster children under parents, with overlap resolution
+  {
+    const y=LEVEL_Y[5],start=31,count=32;
+    const nodes=[];
+    for(let j=start;j<start+count&&j<T.length;j++)if(has(j))nodes.push(j);
+    // Sort by parent x position to process left-to-right
+    nodes.sort((a,b)=>{
+      const pa=a%2===0?(a-2)/2:(a-1)/2;
+      const pb=b%2===0?(b-2)/2:(b-1)/2;
+      return pos[pa].x-pos[pb].x||a-b;
+    });
+    const GAP=28,MIN=16;
+    // Initial placement: clustered under parent, dit left dah right
+    nodes.forEach(idx=>{
+      const p=idx%2===0?(idx-2)/2:(idx-1)/2;
+      const isDah=idx%2===0;
+      const px=pos[p]?pos[p].x:VB_W/2;
+      pos[idx]={x:px+(isDah?GAP/2:-GAP/2),y};
+    });
+    // Push apart any overlaps (left-to-right sweep)
+    for(let i=1;i<nodes.length;i++){
+      const prev=pos[nodes[i-1]].x,cur=pos[nodes[i]].x;
+      if(cur-prev<MIN)pos[nodes[i]].x=prev+MIN;
+    }
+    // Right-to-left sweep for right-edge clamp
+    for(let i=nodes.length-2;i>=0;i--){
+      const next=pos[nodes[i+1]].x,cur=pos[nodes[i]].x;
+      if(next-cur<MIN)pos[nodes[i]].x=next-MIN;
+    }
+  }
+  // Clamp all positions to stay within bounds
+  Object.values(pos).forEach(p=>{p.x=Math.max(PAD+6,Math.min(VB_W-PAD-6,p.x))});
 }
 
 // Edge offsets from node center
